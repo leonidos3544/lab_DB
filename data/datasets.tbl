@@ -1,0 +1,2 @@
+1	MNIST	classification	70000
+2	CIFAR10	classification	60000
