@@ -27,21 +27,29 @@ class MiniDB:
     def _load_schema(self, table):
         columns = []
         pk = None
+        fks = {}
         with open(self._file(table, ".schema"), encoding="utf-8") as f:
             for line in f:
                 parts = line.split()
                 columns.append((parts[0], parts[1]))
                 if len(parts) > 2 and parts[2] == "PK":
                     pk = parts[0]
-        self.tables[table] = {"columns": columns, "pk": pk}
+                if len(parts) > 3 and parts[2] == "FK":
+                    fks[parts[0]] = parts[3]
+        self.tables[table] = {"columns": columns, "pk": pk, "fks": fks}
 
-    def create_table(self, table, columns, primary_key):
-        # columns: [("id", "INT"), ("name", "STRING"), ...]
+    def create_table(self, table, columns, primary_key, foreign_keys=None):
+        fks = foreign_keys or {}
         with open(self._file(table, ".schema"), "w", encoding="utf-8") as f:
             for name, type_ in columns:
-                f.write(f"{name} {type_}" + (" PK" if name == primary_key else "") + "\n")
+                line = f"{name} {type_}"
+                if name == primary_key:
+                    line += " PK"
+                if name in fks:
+                    line += f" FK {fks[name]}"
+                f.write(line + "\n")
         open(self._file(table, ".tbl"), "w", encoding="utf-8").close()
-        self.tables[table] = {"columns": columns, "pk": primary_key}
+        self.tables[table] = {"columns": columns, "pk": primary_key, "fks": fks}
 
     def _read(self, table):
         columns = self.tables[table]["columns"]
@@ -68,6 +76,10 @@ class MiniDB:
         return OPS[op](row[column], value)
 
     def insert(self, table, row):
+        for column, ref_table in self.tables[table]["fks"].items():
+            ref_pk = self.tables[ref_table]["pk"]
+            if not self.select(ref_table, where=(ref_pk, "=", row[column])):
+                raise ValueError(f"FK error: {ref_table}.{ref_pk} = {row[column]} не существует")
         with open(self._file(table, ".tbl"), "a", encoding="utf-8") as f:
             f.write(self._line(table, row))
 

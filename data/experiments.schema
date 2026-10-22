@@ -1,5 +1,5 @@
 id INT PK
-dataset_id INT
-model_id INT
+dataset_id INT FK datasets
+model_id INT FK models
 accuracy FLOAT
 status STRING

@@ -1,2 +1,5 @@
 1	ResNet	1.0
 2	VGG	2.0
+3	BERT	1.1
+4	YOLO	5.0
+5	LinearRegression	1.0

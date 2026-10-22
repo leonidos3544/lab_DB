@@ -1,2 +1,5 @@
 1	MNIST	classification	70000
 2	CIFAR10	classification	60000
+3	IMDB	sentiment	50000
+4	COCO	detection	330000
+5	BostonHousing	regression	506
